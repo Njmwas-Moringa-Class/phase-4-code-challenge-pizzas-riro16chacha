@@ -54,17 +54,25 @@ def get_pizzas():
 @app.route('/restaurant_pizzas', methods=['POST'])
 def create_restaurant_pizza():
     try:
+        price = request.json.get('price')
+        pizza_id = request.json.get('pizza_id')
+        restaurant_id = request.json.get('restaurant_id')
+
+        # Validate price
+        if not 1 <= price <= 30:
+            raise ValueError("validation errors")
+
         new_restaurant_pizza = RestaurantPizza(
-            price=request.json.get('price'),
-            pizza_id=request.json.get('pizza_id'),
-            restaurant_id=request.json.get('restaurant_id'),
+            price=price,
+            pizza_id=pizza_id,
+            restaurant_id=restaurant_id,
         )
         db.session.add(new_restaurant_pizza)
         db.session.commit()
 
         # Retrieve the associated pizza and restaurant
-        pizza = Pizza.query.get(new_restaurant_pizza.pizza_id)
-        restaurant = Restaurant.query.get(new_restaurant_pizza.restaurant_id)
+        pizza = Pizza.query.get(pizza_id)
+        restaurant = Restaurant.query.get(restaurant_id)
 
         return jsonify({
             'id': new_restaurant_pizza.id,
