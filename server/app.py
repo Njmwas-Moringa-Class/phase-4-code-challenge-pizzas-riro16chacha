@@ -53,18 +53,30 @@ def get_pizzas():
 
 @app.route('/restaurant_pizzas', methods=['POST'])
 def create_restaurant_pizza():
-    data = request.json
     try:
-        restaurant_pizza = RestaurantPizza(
-            price=data['price'],
-            pizza_id=data['pizza_id'],
-            restaurant_id=data['restaurant_id']
+        new_restaurant_pizza = RestaurantPizza(
+            price=request.json.get('price'),
+            pizza_id=request.json.get('pizza_id'),
+            restaurant_id=request.json.get('restaurant_id'),
         )
-        db.session.add(restaurant_pizza)
+        db.session.add(new_restaurant_pizza)
         db.session.commit()
-        return jsonify(restaurant_pizza.to_dict(include_pizza=True, include_restaurant=True)), 201
+
+        # Retrieve the associated pizza and restaurant
+        pizza = Pizza.query.get(new_restaurant_pizza.pizza_id)
+        restaurant = Restaurant.query.get(new_restaurant_pizza.restaurant_id)
+
+        return jsonify({
+            'id': new_restaurant_pizza.id,
+            'price': new_restaurant_pizza.price,
+            'pizza': pizza.to_dict(),
+            'pizza_id': new_restaurant_pizza.pizza_id,
+            'restaurant': restaurant.to_dict(),
+            'restaurant_id': new_restaurant_pizza.restaurant_id
+        }), 201
     except ValueError as e:
         return jsonify({"errors": [str(e)]}), 400
+
 
 if __name__ == '__main__':
     app.run(port=5555, debug=True)
